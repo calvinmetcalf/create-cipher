@@ -20,24 +20,25 @@ function Cipher(suite, password, iterations, saltLen) {
   this.push(salt);
   this._cipher = void 0;
   var mode = modes[suite];
-  var len = mode.key + mode.iv;
+  var len = mode.key + mode.iv + mode.key;
   var self = this;
-  this._hash = crypto.createHash('sha512');
   crypto.pbkdf2(password, salt, iterations, len, function (err, resp) {
     if (err) {
       return self.emit('error', err);
     }
     var key = resp.slice(0, mode.key);
-    var iv = resp.slice(mode.key);
+    var iv = resp.slice(mode.key, mode.key + mode.iv);
     self._cipher = crypto.createCipheriv(suite, key, iv);
+    self._hash = crypto.createHmac('sha512', resp.slice(mode.key + mode.iv));
     self.emit('cipher-ready');
   });
 }
 Cipher.prototype._transform = function (chunk, _, next) {
   var self = this;
-  this._hash.update(chunk);
+  
   if (!this._cipher) {
     this.once('cipher-ready', function () {
+      this._hash.update(chunk);
       var result = self._cipher.update(chunk);
       if (result) {
         self.push(result);
@@ -45,6 +46,7 @@ Cipher.prototype._transform = function (chunk, _, next) {
       next();
     });
   } else {
+    this._hash.update(chunk);
     var result = self._cipher.update(chunk);
     if (result) {
       self.push(result);
@@ -73,18 +75,19 @@ function Decipher(suite, password) {
   this._salt = new Buffer('');
   this._cipher = void 0;
   var mode = modes[suite];
-  var len = mode.key + mode.iv;
+  var len = mode.key + mode.iv + mode.key;
   var self = this;
   this._cache = new Buffer('');
-  this._hash = crypto.createHash('sha512');
+  
   this._makesuite = function (salt, cb) {
       crypto.pbkdf2(password, salt, self._iterations, len, function (err, resp) {
       if (err) {
         return cb(err);
       }
       var key = resp.slice(0, mode.key);
-      var iv = resp.slice(mode.key);
+      var iv = resp.slice(mode.key, mode.key + mode.iv);
       self._cipher = crypto.createDecipheriv(suite, key, iv);
+      self._hash = crypto.createHmac('sha512', resp.slice(mode.key + mode.iv));
       cb();
     });
   };

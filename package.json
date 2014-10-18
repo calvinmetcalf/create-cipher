@@ -1,0 +1,32 @@
+{
+  "name": "create-cipher",
+  "version": "1.0.0",
+  "description": "node ciphers with better defaults",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/calvinmetcalf/create-cipher.git"
+  },
+  "keywords": [
+    "cipher",
+    "aes"
+  ],
+  "author": {
+    "name": "Calvin Metcalf"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/calvinmetcalf/create-cipher/issues"
+  },
+  "homepage": "https://github.com/calvinmetcalf/create-cipher",
+  "devDependencies": {
+    "tape": "^3.0.1"
+  },
+  "dependencies": {
+    "inherits": "^2.0.1",
+    "readable-stream": "^1.0.33-1"
+  }
+}
