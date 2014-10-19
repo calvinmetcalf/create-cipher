@@ -11,7 +11,7 @@ function Cipher(suite, password, iterations, saltLen) {
   }
   Transform.call(this);
   iterations = iterations || 1000;
-  saltLen = saltLen || 512;
+  saltLen = saltLen || 16;
   var saltIter = new Buffer(8);
   saltIter.writeUInt32BE(iterations, 0);
   saltIter.writeUInt32BE(saltLen, 4);
