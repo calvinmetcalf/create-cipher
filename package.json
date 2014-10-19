@@ -1,6 +1,6 @@
 {
   "name": "create-cipher",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "node ciphers with better defaults",
   "main": "index.js",
   "scripts": {
