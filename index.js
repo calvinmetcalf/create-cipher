@@ -20,6 +20,9 @@ function Cipher(suite, password, iterations, saltLen) {
   this.push(salt);
   this._cipher = void 0;
   var mode = modes[suite];
+  if (mode.warn) {
+    console.warn(suite, 'is not secure, do not use in production');
+  }
   var len = mode.key + mode.iv;
   var self = this;
   crypto.pbkdf2(password, salt, iterations, len, function (err, resp) {

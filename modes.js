@@ -2,19 +2,22 @@ exports['aes-128-ecb'] = {
   cipher: 'AES',
   key: 16,
   iv: 0,
-  mode: 'ECB'
+  mode: 'ECB',
+  warn: true
 };
 exports['aes-192-ecb'] = {
   cipher: 'AES',
   key: 24,
   iv: 0,
-  mode: 'ECB'
+  mode: 'ECB',
+  warn: true
 };
 exports['aes-256-ecb'] = {
   cipher: 'AES',
   key: 32,
   iv: 0,
-  mode: 'ECB'
+  mode: 'ECB',
+  warn: true
 };
 exports['aes-128-cbc'] = {
   cipher: 'AES',
@@ -34,9 +37,9 @@ exports['aes-256-cbc'] = {
   iv: 16,
   mode: 'CBC'
 };
-exports['aes128'] = exports['aes-128-cbc'];
-exports['aes192'] = exports['aes-192-cbc'];
-exports['aes256'] = exports['aes-256-cbc'];
+exports.aes128 = exports['aes-128-cbc'];
+exports.aes192 = exports['aes-192-cbc'];
+exports.aes256 = exports['aes-256-cbc'];
 exports['aes-128-cfb'] = {
   cipher: 'AES',
   key: 16,
