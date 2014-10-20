@@ -1,4 +1,4 @@
-create-cipher
+create-cipher [![Build Status](https://travis-ci.org/calvinmetcalf/create-cipher.svg)](https://travis-ci.org/calvinmetcalf/create-cipher)
 ====
 
 
