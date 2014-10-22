@@ -26,8 +26,8 @@ Similar to crypto.createCipher but
 ```js
 var createCipher = require('create-cipher');
 
-exports.Cipher(algorithm, password, iterations=1000, saltLen=16);
-exports.Decipher(algorithm, password);
+createCipher.Cipher(algorithm, password, iterations=1000, saltLen=16);
+createCipher.Decipher(algorithm, password);
 // no need to pass in iterations or saltLen
 ```
 
