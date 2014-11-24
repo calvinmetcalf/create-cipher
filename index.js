@@ -12,12 +12,10 @@ function Cipher(suite, password, iterations, saltLen) {
   Transform.call(this);
   iterations = iterations || 1000;
   saltLen = saltLen || 16;
-  var saltIter = new Buffer(8);
-  saltIter.writeUInt32BE(iterations, 0);
-  saltIter.writeUInt32BE(saltLen, 4);
-  this.push(saltIter);
-  var salt = crypto.randomBytes(saltLen);
-  this.push(salt);
+  this._saltIter = new Buffer(8);
+  this._saltIter.writeUInt32BE(iterations, 0);
+  this._saltIter.writeUInt32BE(saltLen, 4);
+  var salt = this._salt = crypto.randomBytes(saltLen);
   this._cipher = void 0;
   var mode = modes[suite];
   if (mode.warn) {
@@ -25,34 +23,29 @@ function Cipher(suite, password, iterations, saltLen) {
   }
   var len = mode.key + mode.iv;
   var self = this;
-  crypto.pbkdf2(password, salt, iterations, len, function (err, resp) {
-    if (err) {
-      return self.emit('error', err);
-    }
-    var key = resp.slice(0, mode.key);
-    var iv = resp.slice(mode.key);
-    self._cipher = crypto.createCipheriv(suite, key, iv);
-    self.emit('cipher-ready');
-  });
+  var resp = crypto.pbkdf2Sync(password, salt, iterations, len);
+
+  var key = resp.slice(0, mode.key);
+  var iv = resp.slice(mode.key);
+  self._cipher = crypto.createCipheriv(suite, key, iv);
 }
+Cipher.prototype.update = function(chunk, inEnc, outEnc) {
+  return this._cipher.update(chunk, inEnc, outEnc);
+};
+Cipher.prototype.final = function(chunk, outEnc) {
+  return this._cipher.final(chunk, outEnc);
+};
 Cipher.prototype._transform = function (chunk, _, next) {
-  var self = this;
-  
-  if (!this._cipher) {
-    this.once('cipher-ready', function () {
-      var result = self._cipher.update(chunk);
-      if (result) {
-        self.push(result);
-      }
-      next();
-    });
-  } else {
-    var result = self._cipher.update(chunk);
-    if (result) {
-      self.push(result);
-    }
-    next();
+  if (this._saltIter) {
+    this.push(this._saltIter);
+    this._saltIter = null;
+    this.push(this._salt);
   }
+  var result = this._cipher.update(chunk);
+  if (result) {
+    this.push(result);
+  }
+  next();
 };
 Cipher.prototype._flush = function (next) {
   var out = this._cipher.final();
@@ -76,16 +69,11 @@ function Decipher(suite, password) {
   var len = mode.key + mode.iv;
   var self = this;
   
-  this._makesuite = function (salt, cb) {
-      crypto.pbkdf2(password, salt, self._iterations, len, function (err, resp) {
-      if (err) {
-        return cb(err);
-      }
-      var key = resp.slice(0, mode.key);
-      var iv = resp.slice(mode.key);
-      self._cipher = crypto.createDecipheriv(suite, key, iv);
-      cb();
-    });
+  this._makesuite = function (salt) {
+    var resp = crypto.pbkdf2Sync(password, salt, self._iterations, len);
+    var key = resp.slice(0, mode.key);
+    var iv = resp.slice(mode.key);
+    self._cipher = crypto.createDecipheriv(suite, key, iv);
   };
 
 }
@@ -109,18 +97,14 @@ Decipher.prototype._transform = function (chunk, _, next) {
     if (this._saltLen < this._salt.length) {
       data = this._salt.slice(this._saltLen);
     }
-    return this._makesuite(salt, function (err) {
-      if (err) {
-        return next(err);
+    this._makesuite(salt);
+    if (data) {
+      var res = self._cipher.update(data);
+      if (res) {
+        self.push(res);
       }
-      if (data) {
-        var result = self._cipher.update(data);
-        if (result) {
-          self.push(result);
-        }
-      }
-      next();
-    });
+    }
+    return next();
   } else {
     var result = self._cipher.update(chunk);
     if (result) {
@@ -135,4 +119,10 @@ Decipher.prototype._flush = function (next) {
     this.push(tail);
   }
   next();
+};
+Decipher.prototype.update = function(chunk, inEnc, outEnc) {
+  return this._cipher.update(chunk, inEnc, outEnc);
+};
+Decipher.prototype.final = function(chunk, outEnc) {
+  return this._cipher.final(chunk, outEnc);
 };
