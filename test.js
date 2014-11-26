@@ -24,6 +24,9 @@ Object.keys(modes).forEach(ourTest);
 
 function ourTest2(algo) {
   var rando = crypto.randomBytes(2);
+  while(!rando[1]) {
+    rando = crypto.randomBytes(2);
+  }
   test(algo + ' iterations: ' + rando[0] + ' salt length: ' + rando[1], function (t) {
     t.plan(2);
     
